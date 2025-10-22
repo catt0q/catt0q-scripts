@@ -10,7 +10,7 @@
 -- Instances: 7 | Scripts: 3 | Modules: 0 | Tags: 0
 local G2L = {};
 
--- ServerStorage.Q_UI
+-- StarterGui.Q_UI
 G2L["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
 G2L["1"]["IgnoreGuiInset"] = true;
 G2L["1"]["DisplayOrder"] = 100;
@@ -23,7 +23,7 @@ G2L["1"]:SetAttribute([[Color]], ColorSequence.new{ColorSequenceKeypoint.new(0.0
 G2L["1"]:SetAttribute([[Mode]], [[]]);
 
 
--- ServerStorage.Q_UI.booty
+-- StarterGui.Q_UI.booty
 G2L["2"] = Instance.new("TextButton", G2L["1"]);
 G2L["2"]["TextWrapped"] = true;
 G2L["2"]["BorderSizePixel"] = 0;
@@ -41,33 +41,33 @@ G2L["2"]["Name"] = [[booty]];
 G2L["2"]["Position"] = UDim2.new(0.41783, 0, 0.06038, 0);
 
 
--- ServerStorage.Q_UI.booty.LocalScript
+-- StarterGui.Q_UI.booty.LocalScript
 G2L["3"] = Instance.new("LocalScript", G2L["2"]);
 
 
 
--- ServerStorage.Q_UI.booty.UICorner
+-- StarterGui.Q_UI.booty.UICorner
 G2L["4"] = Instance.new("UICorner", G2L["2"]);
 
 
 
--- ServerStorage.Q_UI.booty.Dragify
+-- StarterGui.Q_UI.booty.Dragify
 G2L["5"] = Instance.new("LocalScript", G2L["2"]);
 G2L["5"]["Name"] = [[Dragify]];
 
 
--- ServerStorage.Q_UI.booty.UIGradient
+-- StarterGui.Q_UI.booty.UIGradient
 G2L["6"] = Instance.new("UIGradient", G2L["2"]);
 G2L["6"]["Rotation"] = 45;
 G2L["6"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(51, 51, 51))};
 
 
--- ServerStorage.Q_UI.booty.UIGradient.Gradient
+-- StarterGui.Q_UI.booty.UIGradient.Gradient
 G2L["7"] = Instance.new("LocalScript", G2L["6"]);
 G2L["7"]["Name"] = [[Gradient]];
 
 
--- ServerStorage.Q_UI.booty.LocalScript
+-- StarterGui.Q_UI.booty.LocalScript
 local function C_3()
 local script = G2L["3"];
 	local Players = game:GetService("Players")
@@ -126,7 +126,7 @@ local script = G2L["3"];
 	
 end;
 task.spawn(C_3);
--- ServerStorage.Q_UI.booty.Dragify
+-- StarterGui.Q_UI.booty.Dragify
 local function C_5()
 local script = G2L["5"];
 	local UIS = game:GetService("UserInputService")
@@ -168,78 +168,61 @@ local script = G2L["5"];
 	dragify(script.Parent)
 end;
 task.spawn(C_5);
--- ServerStorage.Q_UI.booty.UIGradient.Gradient
+-- StarterGui.Q_UI.booty.UIGradient.Gradient
 local function C_7()
 local script = G2L["7"];
-	local button = script.Parent.Parent
-	local gradient = button:FindFirstChildOfClass("UIGradient")
-	local runService = game:GetService("RunService")
+	local btn = script.Parent.Parent
+	local grad = btn:FindFirstChildOfClass("UIGradient")
+	local rs = game:GetService("RunService")
 	
-	if not gradient then
-		warn("UIGradient not found in the button!")
-		return
-	end
+	if not grad then return end
 	
-	local original = gradient.Color
-	local function brightenColorSequence(seq, factor)
-		local newKeypoints = {}
-		for _, keypoint in ipairs(seq.Keypoints) do
-			local c = keypoint.Value
-			local brighter = Color3.new(
-				math.min(c.R * factor, 1),
-				math.min(c.G * factor, 1),
-				math.min(c.B * factor, 1)
+	local orig = grad.Color
+	
+	local function brighten(seq, f)
+		local k = {}
+		for _, p in ipairs(seq.Keypoints) do
+			local c = p.Value
+			local b = Color3.new(
+				math.min(c.R * f, 1),
+				math.min(c.G * f, 1),
+				math.min(c.B * f, 1)
 			)
-			table.insert(newKeypoints, ColorSequenceKeypoint.new(keypoint.Time, brighter))
+			k[#k+1] = ColorSequenceKeypoint.new(p.Time, b)
 		end
-		return ColorSequence.new(newKeypoints)
+		return ColorSequence.new(k)
 	end
-	local bright = brightenColorSequence(original, 100)
 	
-	-- Lerp function between two Color3s
-	local function lerpColor(c1, c2, alpha)
+	local bright = brighten(orig, 100)
+	
+	local function lerp(a, b, t)
 		return Color3.new(
-			c1.R + (c2.R - c1.R) * alpha,
-			c1.G + (c2.G - c1.G) * alpha,
-			c1.B + (c2.B - c1.B) * alpha
+			a.R + (b.R - a.R) * t,
+			a.G + (b.G - a.G) * t,
+			a.B + (b.B - a.B) * t
 		)
 	end
 	
-	-- Manual tween function for ColorSequence
-	local currentTween = nil
-	local function tweenGradient(fromSeq, toSeq, duration)
-		if currentTween then currentTween:Disconnect() end
-		local startTime = tick()
-	
-		currentTween = runService.RenderStepped:Connect(function()
-			local now = tick()
-			local alpha = math.clamp((now - startTime) / duration, 0, 1)
-	
-			local keypoints = {}
-			for i, fromKey in ipairs(fromSeq.Keypoints) do
-				local toKey = toSeq.Keypoints[i]
-				if toKey then
-					local newColor = lerpColor(fromKey.Value, toKey.Value, alpha)
-					table.insert(keypoints, ColorSequenceKeypoint.new(fromKey.Time, newColor))
+	local tw = nil
+	local function tween(from, to, dur)
+		if tw then tw:Disconnect() end
+		local st = tick()
+		tw = rs.RenderStepped:Connect(function()
+			local a = math.clamp((tick() - st) / dur, 0, 1)
+			local k = {}
+			for i, fk in ipairs(from.Keypoints) do
+				local tk = to.Keypoints[i]
+				if tk then
+					k[#k+1] = ColorSequenceKeypoint.new(fk.Time, lerp(fk.Value, tk.Value, a))
 				end
 			end
-	
-			gradient.Color = ColorSequence.new(keypoints)
-	
-			if alpha >= 1 then
-				currentTween:Disconnect()
-				currentTween = nil
-			end
+			grad.Color = ColorSequence.new(k)
+			if a >= 1 then tw:Disconnect() tw = nil end
 		end)
 	end
-	-- Hover events
-	button.MouseEnter:Connect(function()
-		tweenGradient(gradient.Color, bright, 0.4)
-	end)
 	
-	button.MouseLeave:Connect(function()
-		tweenGradient(gradient.Color, original, 0.4)
-	end)
+	btn.MouseEnter:Connect(function() tween(grad.Color, bright, 0.4) end)
+	btn.MouseLeave:Connect(function() tween(grad.Color, orig, 0.4) end)
 	
 end;
 task.spawn(C_7);
